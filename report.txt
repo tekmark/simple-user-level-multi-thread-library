@@ -1,0 +1,87 @@
+Name: Chao Han
+PartA: Done.
+PartB: Done.
+PartC: Done.
+Extra Credit: Not Done.
+
+CPU: Xeon 1230v (64bit) 4 core 8 threads.
+Operatin System: Ubuntu 13.10 (64bit)
+
+For Part A,
+1. At the beginning of the code, there is a #define which is the number of elements(n).
+2. There is a for loop that initialize the array in revease order.
+3. Create n-1 child threads
+4. Main thread keep checking whether it is sorted. if sorted, exit();
+
+For Part B, NON-PREEMPTIVE
+1. a struct for thread control block is defined.
+   typedef struct {
+     my_pthread_t tid;
+     emun my_pthread_state state;  //UNUSED, RUNNABLE, RUNNING, BLOCKED, ...
+     ucontext_t context;
+     long ret;
+     int index;
+   } my_pthread;
+2. all functions below work well.
+   int my_pthread_create();
+   int my_pthread_exit();
+   int my_pthread_join();
+   int my_pthread_yield();
+   for details, please check comments in mypthread.c
+3. my_pthread *thread[MAX_THREADS] stores all thread control block,
+   and index for main thread is 0;
+4. for my_pthread_create(), for each thread, a stack are created by using
+   getcontext() and makecontext().
+5. for scheduler(), it is looking for a thread which state is runnable. And
+   swapcontext() is used for context switching.
+6. for my_pthread_yield(), state of current state changes from running to
+   runnable, and call scheduler() in order to run another thread.
+7. for my_pthread_join(), state of current state sets to be zombie, then
+   call scheduler(); 
+
+For Part B, PREEMPTIVE
+1. a timer signal is added to the process, when creating main thread. SA_SIGINFO
+   flag is set, because context or siginfo_t is needed in its signal handler.
+2. a signal handler is defined. if in user app, call my_pthread_yield().
+3. When the timer expires, current thread will yield to another one. In this way,
+   every thread can get cpu resource for a specific time. 
+
+For Part C, Mutex
+1. typedef struct {
+     int lock;            //0 free; 1 lock
+     my_pthread_t owener; //owner thread of the mutex
+   } my_pthread_mutex_t; 
+2. mutex operations below work well.
+   my_pthread_mutex_lock();
+   my_pthread_mutex_trylock();
+   my_pthread_mutex_unlock();
+   for details, please check comments in mypthread.c
+
+For Part C, Condition Variable
+1. a my_pthread_queue struct is defined.
+   it has 4 operations 
+   my_pthread_queue_init();
+   my_pthread_queue_enq();     //enqueue
+   my_pthread_queue_deq();     //dequeue
+   my_pthread_queue_destroy();
+2. typedef struct {
+     my_pthread_queue *waiting_queue;
+     int waiting;
+   } my_pthread_cond_t;
+3. Four operations:  
+   my_pthread_cond_init();
+   my_pthread_cond_signal();
+   my_pthread_cond_broadcast(); 
+   my_pthread_cond_wait();
+   my_pthread_cond_destroy();
+4. For my_pthread_cond_wait(), unlock mutex if locked, and enqueue the calling 
+   thread into the cond->waiting_queue and block it. 
+5. For my_pthread_cond_signal(), dequeue one thread from cond->waiting_queue, 
+   and set state of that thread as runnable. my_pthread_cond_broadcast() dequeues
+   all threads in cond->waiting_queue, and make them runnalbe.
+   both of them need to lock mutex before return. 
+6. there is a test case for the condition variable in the hw3a.c. for running the 
+   test case, code need to be uncommented. 
+7. for details, please check comments in pthread.c
+
+
