@@ -32,6 +32,12 @@ static int available_tid = 1;
 
 void my_scheduler();
 
+void ret_statment( void* (*func)(void *), void *arg) {
+  void* ret =  (*func)(arg);
+  my_pthread_exit(ret);
+}
+
+
 #if PREEMPTIVE > 0                                                 //if use timer signal;
 void thread_handler(int signal, siginfo_t *info, void *data) {
   ucontext_t *uc = (ucontext_t*)data;                               //get context
@@ -98,10 +104,11 @@ int my_pthread_create(my_pthread_t *thread, const my_pthread_attr_t *attr,
   //create a stack for the new stack
   threads[thread_index]->context.uc_stack.ss_sp = malloc(sizeof(char) * STACK_SIZE); 
   threads[thread_index]->context.uc_stack.ss_size = sizeof(char) * STACK_SIZE;
-  //contect to be resumed
+  //context to be resumed
   threads[thread_index]->context.uc_link = &current_thread->context;
 
-  makecontext(&threads[thread_index]->context, (void *) start_routine, 1, arg);
+  makecontext(&threads[thread_index]->context, (void *)ret_statment, 2, (void*)start_routine, arg); 
+  //makecontext(&threads[thread_index]->context, (void *) start_routine, 1, arg);
   //make the thread runnable
   threads[thread_index]->state = RUNNABLE;
   threads[thread_index]->index = thread_index;
@@ -111,7 +118,7 @@ int my_pthread_create(my_pthread_t *thread, const my_pthread_attr_t *attr,
 
 void my_pthread_exit(void *retval)
 { 
-  long value; 
+  long value;
   value = (long) retval;  
   current_thread->state = ZOMBIE;
   current_thread->ret = value;
@@ -156,7 +163,6 @@ int my_pthread_join(my_pthread_t thread, void **retval)
 { 
   int i;
   int check_flag = 0;   // 0: no such thread
-
   //find target thread
   while(1) {
     check_flag = 0; 
@@ -165,7 +171,9 @@ int my_pthread_join(my_pthread_t thread, void **retval)
         continue; 
       } else if ( threads[i]->state == ZOMBIE ) { //if tid matches, but pthread_exit() has executed.
         check_flag = 1;
-        *(long **)retval = (long *)threads[i]->ret;
+        if( retval != NULL ) { 
+          *(long **)retval = (long *)threads[i]->ret;
+        }
         threads[i]->state = UNUSED;               //set thread unused
         threads[i]->tid = 0;     
         //free the stack created here              
