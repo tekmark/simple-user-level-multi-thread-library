@@ -199,5 +199,28 @@ int main(int argc, char *argv[])
 
 /********************test case for PartA********************end******************/
 /* Insert code here */
+/*
+void *run(void *para) {
+  int *v = (int*)para;
+  printf("hello v %u\n", *v); 
+  //my_pthread_exit(NULL); 
+  int *a = malloc(sizeof(int));
+  *a = 12;  
+  return NULL; 
+}
+
+int main( int argc, char *argv[]) {
+  my_pthread_t thread;   
+  int rc; 
+  int v = 1; 
+  rc = my_pthread_create(&thread, NULL, (void*)run, (void*)&v); 
+  if( rc < 0) {
+    printf("cannot create thread\n"); 
+  }
+  my_pthread_join(thread, NULL);
+  printf("main thread quit, ret\n"); 
+  return 1; 
+}
+*/
 
 void my_pthread_end() {} /* no code after this */
