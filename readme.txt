@@ -1,4 +1,3 @@
-
 CS519 Homework 3 Notes
 ----------------------
 
@@ -52,4 +51,3 @@ for example, thread creation separately from mutexes.
 
 Please let me know if there are any issues with the files I have sent you
 so that I may update them and re-post them as soon as possible.
-
